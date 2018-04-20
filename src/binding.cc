@@ -13,12 +13,15 @@ namespace {
 NAN_METHOD(Dlopen) {
   Nan::EscapableHandleScope();
 
-  const char *filename;
-  if (info[0]->IsNull()) {
+  char *filename;
+  if (info[0]->IsNull() ) {
     filename = NULL;
   } else if (info[0]->IsString()) {
-    v8::String::Utf8Value name(info[0]);
-    filename = *name;
+    Nan::Utf8String name(info[0]);
+    v8::Local<v8::String> strVal = info[0]->ToString();
+    filename = static_cast<char*>(calloc(1, strVal->Utf8Length() + sizeof(char)));
+    memcpy(filename, *name, strVal->Utf8Length());
+    
   } else {
     return Nan::ThrowTypeError("a string filename, or null must be passed as the first argument");
   }
@@ -37,6 +40,7 @@ NAN_METHOD(Dlopen) {
   }
 #endif
 
+  free(filename);
   info.GetReturnValue().Set(Nan::New<v8::Integer>(r));
 }
 
