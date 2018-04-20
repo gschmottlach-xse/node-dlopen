@@ -11,19 +11,19 @@ namespace {
  */
 
 NAN_METHOD(Dlopen) {
-  NanEscapableScope();
+  Nan::EscapableHandleScope();
 
   const char *filename;
-  if (args[0]->IsNull()) {
+  if (info[0]->IsNull()) {
     filename = NULL;
-  } else if (args[0]->IsString()) {
-    v8::String::Utf8Value name(args[0]);
+  } else if (info[0]->IsString()) {
+    v8::String::Utf8Value name(info[0]);
     filename = *name;
   } else {
-    return NanThrowTypeError("a string filename, or null must be passed as the first argument");
+    return Nan::ThrowTypeError("a string filename, or null must be passed as the first argument");
   }
 
-  v8::Local<v8::Object> buf = args[1].As<v8::Object>();
+  v8::Local<v8::Object> buf = info[1].As<v8::Object>();
 
   uv_lib_t *lib = reinterpret_cast<uv_lib_t *>(node::Buffer::Data(buf));
   int r = 0;
@@ -37,7 +37,7 @@ NAN_METHOD(Dlopen) {
   }
 #endif
 
-  NanReturnValue(NanNew<v8::Integer>(r));
+  info.GetReturnValue().Set(Nan::New<v8::Integer>(r));
 }
 
 /**
@@ -45,15 +45,15 @@ NAN_METHOD(Dlopen) {
  */
 
 NAN_METHOD(Dlclose) {
-  NanEscapableScope();
+  Nan::EscapableHandleScope();
 
-  v8::Local<v8::Object> buf = args[0].As<v8::Object>();
+  v8::Local<v8::Object> buf = info[0].As<v8::Object>();
 
   uv_lib_t *lib = reinterpret_cast<uv_lib_t *>(node::Buffer::Data(buf));
 
   uv_dlclose(lib);
 
-  NanReturnUndefined();
+  info.GetReturnValue().SetUndefined();
 }
 
 /**
@@ -61,11 +61,11 @@ NAN_METHOD(Dlclose) {
  */
 
 NAN_METHOD(Dlsym) {
-  NanEscapableScope();
+  Nan::EscapableHandleScope();
 
-  v8::Local<v8::Object> buf = args[0].As<v8::Object>();
-  v8::String::Utf8Value name(args[1]);
-  v8::Local<v8::Object> sym_buf = args[2].As<v8::Object>();
+  v8::Local<v8::Object> buf = info[0].As<v8::Object>();
+  v8::String::Utf8Value name(info[1]);
+  v8::Local<v8::Object> sym_buf = info[2].As<v8::Object>();
 
   uv_lib_t *lib = reinterpret_cast<uv_lib_t *>(node::Buffer::Data(buf));
   void *sym = reinterpret_cast<void *>(node::Buffer::Data(sym_buf));
@@ -80,7 +80,7 @@ NAN_METHOD(Dlsym) {
   }
 #endif
 
-  NanReturnValue(NanNew<v8::Integer>(r));
+  info.GetReturnValue().Set(Nan::New<v8::Integer>(r));
 }
 
 /**
@@ -90,13 +90,13 @@ NAN_METHOD(Dlsym) {
 #if NODE_VERSION_AT_LEAST(0, 7, 9)
 
 NAN_METHOD(Dlerror) {
-  NanEscapableScope();
+  Nan::EscapableHandleScope();
 
-  v8::Local<v8::Object> buf = args[0].As<v8::Object>();
+  v8::Local<v8::Object> buf = info[0].As<v8::Object>();
 
   uv_lib_t *lib = reinterpret_cast<uv_lib_t *>(node::Buffer::Data(buf));
 
-  NanReturnValue(NanNew<v8::String>(uv_dlerror(lib)));
+  info.GetReturnValue().Set(Nan::New<v8::String>(uv_dlerror(lib)).ToLocalChecked());
 }
 
 #endif
@@ -104,17 +104,17 @@ NAN_METHOD(Dlerror) {
 } // anonymous namespace
 
 void init (v8::Handle<v8::Object> target) {
-  NanScope();
+  Nan::HandleScope();
 
-  target->Set(NanNew<v8::String>("sizeof_uv_lib_t"), NanNew<v8::Uint32>(static_cast<uint32_t>(sizeof(uv_lib_t))));
-  target->Set(NanNew<v8::String>("sizeof_void_ptr"), NanNew<v8::Uint32>(static_cast<uint32_t>(sizeof(void *))));
+  target->Set(Nan::New<v8::String>("sizeof_uv_lib_t").ToLocalChecked(), Nan::New<v8::Uint32>(static_cast<uint32_t>(sizeof(uv_lib_t))));
+  target->Set(Nan::New<v8::String>("sizeof_void_ptr").ToLocalChecked(), Nan::New<v8::Uint32>(static_cast<uint32_t>(sizeof(void *))));
 
-  NODE_SET_METHOD(target, "dlopen", Dlopen);
-  NODE_SET_METHOD(target, "dlclose", Dlclose);
-  NODE_SET_METHOD(target, "dlsym", Dlsym);
+  Nan::SetMethod(target, "dlopen", Dlopen);
+  Nan::SetMethod(target, "dlclose", Dlclose);
+  Nan::SetMethod(target, "dlsym", Dlsym);
 #if NODE_VERSION_AT_LEAST(0, 7, 9)
   // libuv with node < 0.7.9 didn't have any dlerror() function
-  NODE_SET_METHOD(target, "dlerror", Dlerror);
+  Nan::SetMethod(target, "dlerror", Dlerror);
 #endif
 }
 NODE_MODULE(binding, init);
