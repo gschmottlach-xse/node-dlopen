@@ -71,7 +71,7 @@ function Library (name, noExtension) {
   this.name = name;
 
   // create the `uv_lib_t` data space
-  this.uv_lib_t = new Buffer(bindings.sizeof_uv_lib_t);
+  this.uv_lib_t = Buffer.alloc(bindings.sizeof_uv_lib_t);
 
   // do the `dlopen()` dance
   var r = bindings.dlopen(name, this.uv_lib_t);

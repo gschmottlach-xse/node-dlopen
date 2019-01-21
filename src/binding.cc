@@ -68,7 +68,7 @@ NAN_METHOD(Dlsym) {
   Nan::EscapableHandleScope();
 
   v8::Local<v8::Object> buf = info[0].As<v8::Object>();
-  v8::String::Utf8Value name(info[1]);
+  Nan::Utf8String name(info[1]);
   v8::Local<v8::Object> sym_buf = info[2].As<v8::Object>();
 
   uv_lib_t *lib = reinterpret_cast<uv_lib_t *>(node::Buffer::Data(buf));
